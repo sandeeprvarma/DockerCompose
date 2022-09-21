@@ -1,0 +1,69 @@
+version: "3.7"
+services:
+    # image: docker.io/bitnami/codeigniter:4
+    # ports:
+    #   - '8000:8000'
+    # environment:
+    #   # ALLOW_EMPTY_PASSWORD is recommended only for development.
+    #   - ALLOW_EMPTY_PASSWORD=yes
+    #   - CODEIGNITER_DATABASE_HOST=mariadb
+    #   - CODEIGNITER_DATABASE_PORT_NUMBER=3306
+    #   - CODEIGNITER_DATABASE_USER=bn_myapp
+    #   - CODEIGNITER_DATABASE_NAME=bitnami_myapp
+    # volumes:
+    #   - './my-project:/app'
+    # depends_on:
+    #   - mariadb
+  webserver:
+    # image: php:7.0-apache
+    image: thecodingmachine/php:7.4-v3-apache-node12
+    container_name: test-webserver
+    working_dir: /var/www/html
+    environment:
+      # PHP_EXTENSIONS: mysqli apcu pdo_mysql opcache redis zip soap mcrypt gd yaml exif xdebug
+      PHP_EXTENSIONS: apcu pdo_mysql opcache redis zip gd yaml exif xdebug
+      # PHP_EXTENSIONS: xdebug intl yaml gd
+      PHP_EXTENSION_GD: 1
+      PHP_EXTENSION_MYSQLI: 1
+      APACHE_DOCUMENT_ROOT: app
+      APACHE_RUN_GROUP: www-data # use www-data user in container.. which is also used on most webservers for deployer
+      APACHE_RUN_USER: www-data
+      #PHP_INI_XDEBUG__REMOTE_AUTOSTART: 1
+      PHP_EXTENSION_XDEBUG: 1
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/var/www/html
+      - ~/.ssh:/root/.ssh
+    stdin_open: true
+    tty: true
+    ports:
+      - "9090:80"
+    #networks:
+    #  - laravelapp
+  mysql:
+    image: mysql:5.7
+    container_name: test-mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3307"
+    expose:
+      - 3307
+    environment:
+      MYSQL_ROOT_PASSWORD: MYSQL_ALLOW_EMPTY_PASSWORD
+      MYSQL_DATABASE: test-db
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: password
+      MYSQL_TCP_PORT: 3307
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    container_name: test-phpadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: testuser
+      PMA_PASSWORD: password
+      PMA_PORT: 3307
+      UPLOAD_LIMIT: 300M
+    ports:
+      - 9091:80
