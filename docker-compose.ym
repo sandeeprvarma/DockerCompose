@@ -1,0 +1,59 @@
+version: "1.0"
+services:
+  webserver:
+    image: thecodingmachine/php:8.0-v4-apache-node10
+    container_name: app-server
+    working_dir: /var/www/html
+    environment:
+      PHP_EXTENSIONS: apcu pdo_mysql opcache redis zip soap gd yaml exif xdebug
+      PHP_EXTENSION_GD: 1
+      PHP_EXTENSION_MYSQLI: 0 #set to 1 for mysqli extention
+      APACHE_DOCUMENT_ROOT: public
+      APACHE_RUN_GROUP: www-data # use www-data user in container.. which is also used on most webservers for deployer
+      APACHE_RUN_USER: www-data
+      #PHP_INI_XDEBUG__REMOTE_AUTOSTART: 1
+      PHP_EXTENSION_XDEBUG: 1
+      # CRON_USER: root
+      # CRON_SCHEDULE: '* * * * *'
+      # CRON_COMMAND: '<COMMAND>'
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/var/www/html
+      - ~/.ssh:/root/.ssh
+    stdin_open: true
+    tty: true
+    ports:
+      - "8081:80"
+    #networks:
+    #  - laravelapp
+  mysql:
+    image: mysql:8.0
+    container_name: app-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_DATABASE: 'testdbname'
+      MYSQL_USER: 'testdbuser'
+      MYSQL_PASSWORD: 'password'
+    #networks:
+    #  - laravelapp
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    container_name: app-phpadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: 'testdbuser'
+      PMA_PASSWORD: 'password'
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 300M
+    ports:
+      - 8084:80
+    #networks:
+      #- laravelapp
+  redis:
+    image: redis
+    container_name: app-redis
